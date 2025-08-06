@@ -2,68 +2,196 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Link Safety Dashboard</title>
+  <meta name="theme-color" content="#111" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 3rem auto;
-      padding: 2rem;
-      background: #f8f8f8;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    :root{
+      --bg:#f7f7f8; --fg:#101114; --muted:#5e6772; --card:#ffffff; --btn:#1f2329; --btnfg:#fff;
+      --ring: rgba(0,0,0,.15);
+      --radius:16px; --gap:16px; --pad:20px; --shadow:0 6px 24px rgba(0,0,0,.08);
+      --fs-base:16px; --fs-lg:18px; --fs-xl:20px;
+      --input-pad:14px; --btn-pad:14px;
     }
-    input, button {
-      font-size: 1rem;
-      padding: 0.5rem;
-      margin: 0.5rem 0;
-      width: 100%;
+    @media (prefers-color-scheme: dark){
+      :root{ --bg:#0e1116; --fg:#e8eef6; --muted:#9aa7b6; --card:#151a22; --btn:#2a313b; --btnfg:#e8eef6; --ring: rgba(255,255,255,.18); }
     }
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
+    /* Desktop roomy defaults; we’ll bump sizes for coarse pointers (touch) below */
+    *{ box-sizing:border-box }
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.4;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      font-size: var(--fs-base);
     }
-    .btn {
-      background-color: #444;
-      color: #fff;
+    .wrap{ max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    .card{ background:var(--card); border-radius:var(--radius); padding:var(--pad); box-shadow:var(--shadow); }
+    h1{ margin:0 0 6px; font-size: clamp(1.2rem, 2.5vw, 1.6rem); }
+    p.sub{ margin:0 0 14px; color:var(--muted); }
+    .grid{ display:grid; gap:var(--gap); grid-template-columns: 1fr; }
+    .row{ display:flex; flex-wrap:wrap; gap:var(--gap); }
+    input[type="text"]{
+      width:100%; font-size:1rem; padding:var(--input-pad); border-radius:12px;
+      border:1px solid transparent; background: rgba(127,127,127,.08); color:var(--fg); outline:none;
     }
-    .btn:hover {
-      background-color: #666;
+    input[type="text"]:focus{ box-shadow: 0 0 0 3px var(--ring); }
+    .btn{
+      flex:1 1 220px; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding: var(--btn-pad); font-weight:600; border:none; border-radius:12px;
+      background:var(--btn); color:var(--btnfg); cursor:pointer; user-select:none;
+    }
+    .btn:hover{ filter: brightness(1.05); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.full{ flex-basis:100%; }
+    .small{
+      background:transparent; border:1px dashed rgba(127,127,127,.35); color:var(--muted);
+      padding:10px 12px; border-radius:10px; font-size:.95rem; cursor:pointer;
+    }
+    .help, .foot{ color:var(--muted); }
+    .help{ margin-top:8px; }
+    .foot{ margin-top:14px; font-size:.92rem; }
+    .kicker{ margin-top: 12px; display:flex; gap:8px; flex-wrap:wrap; }
+
+    /* Desktop layout enhancements */
+    @media (min-width: 720px){
+      .grid{ grid-template-columns: 1fr 1fr; align-items:start; }
+      .stack{ grid-column: 1 / -1; }
+    }
+
+    /* Touch-first tuning: bigger targets, spacing, and fonts on coarse pointers */
+    @media (pointer: coarse){
+      :root{ --fs-base:17px; --fs-lg:19px; --fs-xl:21px; --input-pad:16px; --btn-pad:16px; --gap:18px; }
+      .btn{ border-radius:14px; }
+      .small{ padding:12px 14px; border-radius:12px; }
+    }
+
+    /* Hover-only affordances for desktop users */
+    @media (hover: hover){
+      .btn[data-tip] { position:relative; }
+      .btn[data-tip]::after{
+        content:attr(data-tip);
+        position:absolute; bottom: calc(100% + 8px); left:50%; transform: translateX(-50%);
+        background:rgba(20,24,34,.95); color:#fff; padding:6px 8px; border-radius:8px; font-size:.85rem; white-space:nowrap;
+        opacity:0; pointer-events:none; transition:.15s; box-shadow:0 4px 18px rgba(0,0,0,.25);
+      }
+      .btn[data-tip]:hover::after{ opacity:1; }
     }
   </style>
 </head>
 <body>
-  <h1>🔗 Link Safety Dashboard</h1>
-  <p>Paste a URL below and click a checker to analyze it for phishing or threats.</p>
-
-  <input type="text" id="urlInput" placeholder="https://suspicious-link.com" />
-
-  <button class="btn" onclick="checkURLVoid()">Check with URLVoid</button>
-  <button class="btn" onclick="checkGoogle()">Check with Google Safe Browsing</button>
-  <button class="btn" onclick="checkVirusTotal()">Check with VirusTotal</button>
+  <div class="wrap">
+    <div class="card">
+      <div class="grid">
+        <div>
+          <h1>🔗 Link Safety Dashboard</h1>
+          <p class="sub" id="modeLine">Paste a URL once. Open reports in new tabs.</p>
+        </div>
+        <div></div>
+        <div class="stack">
+          <input id="urlInput" type="text" inputmode="url" autocomplete="on" placeholder="https://example.com or example.com" />
+          <div class="row" style="margin-top:12px;">
+            <button class="btn full" id="openAllBtn" data-tip="Opens URLVoid, Google Safe Browsing, VirusTotal">🚀 Open All</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnUrlVoid" data-tip="Multi-blacklist report + domain intel">URLVoid</button>
+            <button class="btn" id="btnGoogle" data-tip="Google Safe Browsing verdict">Google Safe</button>
+            <button class="btn" id="btnVT" data-tip="60+ engines consensus">VirusTotal</button>
+          </div>
+          <div class="kicker">
+            <button class="small" id="btnPhishTank" title="Community phishing database">+ PhishTank</button>
+            <button class="small" id="btnKaspersky" title="Kaspersky OpenTIP">+ Kaspersky</button>
+            <button class="small" id="btnCopy" title="Copy normalized URL">Copy URL</button>
+            <button class="small" id="btnPaste" title="Paste from clipboard">Paste</button>
+          </div>
+          <p class="help">Tip: If you enter <code>example.com</code>, we’ll treat it as <code>https://example.com</code>.</p>
+          <p class="foot" id="popupNote">Note: Some browsers block multiple tabs—tap buttons individually if needed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    function getSanitizedURL() {
-      const url = document.getElementById("urlInput").value.trim();
-      return encodeURIComponent(url);
+    const $ = s => document.querySelector(s);
+
+    // Environment signals
+    const isCoarse = matchMedia('(pointer: coarse)').matches;
+    const isHoverCapable = matchMedia('(hover: hover)').matches;
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    // UX copy tweaks per environment
+    const modeLine = $('#modeLine');
+    const popupNote = $('#popupNote');
+    if(isCoarse || isMobileUA){
+      modeLine.textContent = 'Paste a URL, then tap a checker. “Open All” may be limited by popup blockers.';
+      popupNote.textContent = 'Heads-up: Mobile browsers often block multiple tabs. If “Open All” only opens one, tap the others.';
+    } else {
+      modeLine.textContent = 'Paste a URL, then click a checker. “Open All” opens three tabs.';
+      popupNote.textContent = 'If your popup blocker intervenes, allow popups for this site or use the buttons individually.';
     }
 
-    function checkURLVoid() {
-      const url = getSanitizedURL();
-      window.open("https://www.urlvoid.com/scan/" + url + "/", "_blank");
+    // URL helpers
+    function normalizeUrl(raw){
+      let u = (raw || '').trim();
+      if(!u) return '';
+      // Strip wrapping quotes
+      u = u.replace(/^\s*['"]|['"]\s*$/g, '');
+      // If it looks like a bare domain/path, add https://
+      if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)){
+        u = 'https://' + u;
+      }
+      return u;
+    }
+    const enc = (u) => encodeURIComponent(u);
+
+    // Openers
+    const openTab = (url) => window.open(url, '_blank', 'noopener,noreferrer');
+    const urlVoid   = (u) => openTab('https://www.urlvoid.com/scan/' + enc(u) + '/');
+    const googleSB  = (u) => openTab('https://transparencyreport.google.com/safe-browsing/search?url=' + enc(u));
+    const virusTotal= (u) => openTab('https://www.virustotal.com/gui/url/search?q=' + enc(u));
+    const phishTank = (u) => openTab('https://phishtank.org/search.php?isaphishurl=' + enc(u) + '&Search=Search');
+    const kaspersky = (u) => openTab('https://opentip.kaspersky.com/' + enc(u));
+
+    function getURL(){
+      const u = normalizeUrl($('#urlInput').value);
+      if(!u){ alert('Please enter a URL first.'); }
+      return u;
     }
 
-    function checkGoogle() {
-      const url = getSanitizedURL();
-      window.open("https://transparencyreport.google.com/safe-browsing/search?url=" + url, "_blank");
-    }
+    // Handlers
+    $('#btnUrlVoid').addEventListener('click', () => { const u=getURL(); if(u) urlVoid(u); });
+    $('#btnGoogle').addEventListener('click', () => { const u=getURL(); if(u) googleSB(u); });
+    $('#btnVT').addEventListener('click', () => { const u=getURL(); if(u) virusTotal(u); });
+    $('#btnPhishTank').addEventListener('click', () => { const u=getURL(); if(u) phishTank(u); });
+    $('#btnKaspersky').addEventListener('click', () => { const u=getURL(); if(u) kaspersky(u); });
 
-    function checkVirusTotal() {
-      const url = getSanitizedURL();
-      window.open("https://www.virustotal.com/gui/url/search?q=" + url, "_blank");
-    }
+    $('#openAllBtn').addEventListener('click', () => {
+      const u = getURL(); if(!u) return;
+      // Attempt sequential opens; some mobile browsers will only allow the first.
+      urlVoid(u); googleSB(u); virusTotal(u);
+    });
+
+    $('#btnCopy').addEventListener('click', async () => {
+      const u = normalizeUrl($('#urlInput').value);
+      if(!u) return alert('Nothing to copy yet — enter a URL.');
+      try { await navigator.clipboard.writeText(u); alert('URL copied.'); }
+      catch { alert('Copy failed. Select the text and copy manually.'); }
+    });
+
+    $('#btnPaste').addEventListener('click', async () => {
+      try {
+        const txt = await navigator.clipboard.readText();
+        if(txt) $('#urlInput').value = txt.trim();
+        else alert('Clipboard is empty.');
+      } catch {
+        alert('Clipboard access not allowed. Long-press → Paste.');
+      }
+    });
+
+    // Enter submits
+    $('#urlInput').addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ $('#openAllBtn').click(); }
+    });
   </script>
 </body>
 </html>
