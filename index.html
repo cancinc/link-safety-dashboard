@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Link Safety Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 3rem auto;
+      padding: 2rem;
+      background: #f8f8f8;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+    .btn {
+      background-color: #444;
+      color: #fff;
+    }
+    .btn:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔗 Link Safety Dashboard</h1>
+  <p>Paste a URL below and click a checker to analyze it for phishing or threats.</p>
+
+  <input type="text" id="urlInput" placeholder="https://suspicious-link.com" />
+
+  <button class="btn" onclick="checkURLVoid()">Check with URLVoid</button>
+  <button class="btn" onclick="checkGoogle()">Check with Google Safe Browsing</button>
+  <button class="btn" onclick="checkVirusTotal()">Check with VirusTotal</button>
+
+  <script>
+    function getSanitizedURL() {
+      const url = document.getElementById("urlInput").value.trim();
+      return encodeURIComponent(url);
+    }
+
+    function checkURLVoid() {
+      const url = getSanitizedURL();
+      window.open("https://www.urlvoid.com/scan/" + url + "/", "_blank");
+    }
+
+    function checkGoogle() {
+      const url = getSanitizedURL();
+      window.open("https://transparencyreport.google.com/safe-browsing/search?url=" + url, "_blank");
+    }
+
+    function checkVirusTotal() {
+      const url = getSanitizedURL();
+      window.open("https://www.virustotal.com/gui/url/search?q=" + url, "_blank");
+    }
+  </script>
+</body>
+</html>
