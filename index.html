@@ -30,17 +30,33 @@
     h1{ margin:0 0 6px; font-size: clamp(1.2rem, 2.5vw, 1.6rem); }
     p.sub{ margin:0 0 14px; color:var(--muted); }
     .grid{ display:grid; gap:var(--gap); grid-template-columns: 1fr; }
-    .row{ display:flex; flex-wrap:wrap; gap:var(--gap); }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--gap) * 1.25); /* more breathing room between buttons */
+        margin-top: 10px; /* space above button rows */
+        }
     input[type="text"]{
       width:100%; font-size:1rem; padding:var(--input-pad); border-radius:12px;
       border:1px solid transparent; background: rgba(127,127,127,.08); color:var(--fg); outline:none;
     }
     input[type="text"]:focus{ box-shadow: 0 0 0 3px var(--ring); }
-    .btn{
-      flex:1 1 220px; display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      padding: var(--btn-pad); font-weight:600; border:none; border-radius:12px;
-      background:var(--btn); color:var(--btnfg); cursor:pointer; user-select:none;
-    }
+    .btn {
+          flex: 1 1 240px; /* allow each button to grow but keep a wider min size */
+          min-width: 180px; /* stops them shrinking too small */
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: var(--btn-pad);
+          font-weight: 600;
+          border: none;
+          border-radius: 12px;
+          background: var(--btn);
+          color: var(--btnfg);
+          cursor: pointer;
+          user-select: none;
+        }
     .btn:hover{ filter: brightness(1.05); }
     .btn:active{ transform: translateY(1px); }
     .btn.full{ flex-basis:100%; }
